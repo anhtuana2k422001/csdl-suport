@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: vn.name.hoanhtuan.csdlsuport.CsdlSuportApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 86.842 s - in vn.name.hoanhtuan.csdlsuport.CsdlSuportApplicationTests
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 29.744 s - in vn.name.hoanhtuan.csdlsuport.CsdlSuportApplicationTests
