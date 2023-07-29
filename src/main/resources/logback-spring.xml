@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!--Config log -->
+    <property name="FILE_NAME_LOG" value="log/my_log.log" />
+    <property name="LOG_DAY" value="log/archived/my_log-%d{yyyy-MM-dd}.%i.log.gz" />
+    <property name="INFO_CONSOLE_LOG" value="%yellow(%d{ISO8601}) %highlight(%-5level) [%green(%-22thread)] %cyan{requestId} [%blue(%logger{0}.%method:%line)] %magenta(%msg) %throwable%n"/>
+    <property name="INFO_FILE_LOG" value="%d %-5p [%-21t] {requestId} [%logger{0}.%method:%line] %m %n"/>
+    <property name="MAX_SIZE_LOG" value="10MB"/>
+    <!-- Case 1 : Log console -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                ${INFO_CONSOLE_LOG}
+            </Pattern>
+        </layout>
+    </appender>
+
+    <!-- Case 2 : Log file -->
+    <appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${FILE_NAME_LOG}</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <Pattern>${INFO_FILE_LOG}</Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DAY}</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>${MAX_SIZE_LOG}</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="Console" />
+    </root>
+    <logger name="vn.name.hoanhtuan.csdlsuport" level="info" additivity="false">
+        <appender-ref ref="RollingFile" />
+        <appender-ref ref="Console" />
+    </logger>
+</configuration>
