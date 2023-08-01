@@ -6,5 +6,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Constant {
     public static final String REQUEST_ID = "requestId";
-    private static final String REQUEST= "Request {}";
+    public static final String REQUEST_BODY = "Request body: {}";
+    public static final String REQUEST = "REQUEST";
+    public static final String ERROR = "Error: ";
+
 }
