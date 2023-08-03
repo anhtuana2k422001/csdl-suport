@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 public class Constant {
     public static final String REQUEST_ID = "requestId";
     public static final String REQUEST_BODY = "Request body: {}";
-    public static final String REQUEST = "REQUEST";
-    public static final String ERROR = "Error: ";
+    public static final String RESPONSE_BODY = "Response body: {}";
+    public static final String EXCEPTION = "Exception: {}";
+    public static final String EXCEPTION_MESSAGE = "Error message: {}";
 
 }
