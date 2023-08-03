@@ -15,6 +15,8 @@ public class CSDLServiceImpl implements CSDLService {
 
         // Xử lý code
         String data = "{ AC }+ = ACDEGB";
+
+
         return ResponseCSDLSupport.builder()
                 .enumResultCode(EnumResultCode.SUCCESS)
                 .data(data)

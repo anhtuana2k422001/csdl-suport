@@ -3,13 +3,12 @@ package vn.name.hoanhtuan.csdlsuport.excepion;
 import lombok.Getter;
 import vn.name.hoanhtuan.csdlsuport.common.EnumResultCode;
 import vn.name.hoanhtuan.csdlsuport.model.ErrorMessage;
-
-public class CSDLException extends RuntimeException{
+public class CSDLException extends RuntimeException {
     @Getter
-    private final ErrorMessage errorMessage;
+    private final transient ErrorMessage errorMessage;
 
     public CSDLException(ErrorMessage errorBean) {
-        super();
+        super(errorBean.getMessage());
         this.errorMessage = errorBean;
     }
 

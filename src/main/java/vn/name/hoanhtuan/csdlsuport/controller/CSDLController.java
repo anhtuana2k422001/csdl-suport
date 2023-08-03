@@ -3,7 +3,6 @@ package vn.name.hoanhtuan.csdlsuport.controller;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,9 +32,9 @@ public class CSDLController {
         CommonUtil.writeLogRequestId(request.getRequestId());
         LOGGER.info(Constant.REQUEST_BODY, JacksonUtils.toJSonString(request));
         ResponseBase response = new ResponseBase(EnumResultCode.SYSTEM_ERROR);
-        try{
 
-            // Check request null
+        try{
+             // Check request null
             if(ObjectUtils.isEmpty(request)){
                 return ResponseUtils.response(new ResponseBase(EnumResultCode.INVALID_PARAM_REQUEST));
             }
@@ -49,8 +48,10 @@ public class CSDLController {
              response = csdlService.timBaoDong(request);
 
         }catch (Exception ex){
-            CommonUtil.handleException(ex);
+           CommonUtil.handleException(ex);
         }
+
+        LOGGER.info(Constant.RESPONSE_BODY, response);
         return ResponseUtils.response(response);
     }
 
