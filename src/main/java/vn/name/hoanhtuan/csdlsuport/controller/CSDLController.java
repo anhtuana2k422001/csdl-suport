@@ -42,7 +42,7 @@ public class CSDLController {
             // Validate request
             ErrorMessage errorMessage = request.validateInput();
             if(ObjectUtils.isNotEmpty(errorMessage)){
-                response = new ResponseBase(errorMessage);
+                return ResponseUtils.response(new ResponseBase(errorMessage));
             }
 
              response = csdlService.timBaoDong(request);
