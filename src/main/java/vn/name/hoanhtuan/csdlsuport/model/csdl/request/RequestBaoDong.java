@@ -34,7 +34,7 @@ public class RequestBaoDong  extends RequestBase {
         }
 
         if(StringUtils.isBlank(properties)){
-            return new ErrorMessage(EnumResultCode.REQUIRED_SERVICE);
+            return new ErrorMessage(EnumResultCode.REQUIRED_PROPERTIES);
         }
 
         return null;

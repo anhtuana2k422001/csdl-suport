@@ -8,11 +8,20 @@ public enum EnumResultCode {
     SUCCESS("000", "Success"),
     INVALID_REQUEST("001", "Invalid request"),
     SYSTEM_ERROR("999", "System Error"),
-    INVALID_PARAM_REQUEST("REQUEST_001", "Invalid request"),
-    REQUIRED_REQUEST_ID("REQUEST_002", "RequestId is required"),
-    REQUIRED_ATTRIBUTE_SET("REQUEST_003", "AttributeSet is required"),
-    REQUIRED_DEPENDENCY_CHAIN("REQUEST_004", "DependencyChain is required"),
-    REQUIRED_SERVICE("REQUEST.005", "Service is required"),
+    PROPERTIES_ERROR("002", "Ký tự của thuộc tính tìm bao đóng không nằm trong tập thuốc tính Q(U)"),
+    DEPENDENCY_NUMBER_INVALID("003", "Phụ thuộc hàm không nhận ký tự số !"),
+    DEPENDENCY_INVALID("004", "Phụ thuộc hàm không hợp lệ"),
+    DEPENDENCY_ERROR("005", "Thuộc tính của phụ thuộc hàm không nằm trong với tập thuộc tính Q (U)"),
+    DEPENDENCY_ERROR_LOGIC("006", "Tập phụ thuộc hàm mới nhập không hợp lệ. Chương trình chỉ phân biết được các ký tự trong bảng chữ cái tiếng anh và một số ký tự hỗ trợ phụ thuộc hàm."),
+    ATTRIBUTE_SET_ERROR_REG("007", "Tập thuộc tính không hợp lệ! Chú ý: Không dùng các ký tự ký hiệu của lược đồ quan hệ sau (1) F là ký hiệu phụ thuộc hàm - (2) U, Q là ký hiệu tập thuộc tính => Giải quyết: Nếu đề bài yêu cầu dùng ký tự đó bạn có thể thay thế ký hiệu khác chưa dùng đến trong tập thuộc tính và tập thuốc tính với tập phụ thuộc hàm phải đồng bộ"),
+    ATTRIBUTE_SET_ERROR_LOGIC("008", "Tập thuộc tính mới nhập không hợp lệ. Chương trình chỉ phân biết được các ký tự trong bảng chữ cái tiếng anh và một số ký tự sau: (1) dấu ngoặc mở: () - (2) dấu phẩy: , - (3) dấu chấm: . - (4) dấu chấm phẩy: ; - (5) dấu ngoặc ngọn: {} - (6) dấu bằng: ="),
+
+    // INVALID REQUEST
+    INVALID_PARAM_REQUEST("REQUEST_001", "Đầu vào khoongg hợp lệ"),
+    REQUIRED_REQUEST_ID("REQUEST_002", "RequestId là bắt buộc"),
+    REQUIRED_ATTRIBUTE_SET("REQUEST_003", "AttributeSet là bắt buộc"),
+    REQUIRED_DEPENDENCY_CHAIN("REQUEST_004", "DependencyChain là bắt buộc"),
+    REQUIRED_PROPERTIES("REQUEST.005", "Properties là bắt buộc"),
     ;
     private final String code;
     private final String message;
