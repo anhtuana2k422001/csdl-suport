@@ -12,26 +12,32 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Handle {
 
-    // Hàm tìm bao đóng
-    public String BaoDong(String lqhp) {
-        String[] searchList = {",", "\\s", "\\(", "\\)", "\\{", "\\}", "\\.", ";", "="};
+    /**
+     *  Hàm tìm bao đóng
+     * @param lqhp
+     * @return replaceAll("[,\\s\\(\\)\\{\\}\\.\\;\\=]", "")
+     */
+
+    public static String BaoDong(String lqhp) {
+        String[] searchList = {",", " ", "(", ")", "{", "}", ".", ";", "="};
         String[] replacementList = {"", "", "", "", "", "", "", "", ""};
         return StringUtils.replaceEach(lqhp, searchList, replacementList);
     }
 
-    // Hàm xử lý lại đề bài nhập vào
-    public String TapPhuThuocHam(String pth){
+    /**   Hàm xử lý lại đề bài nhập vào */
+    public static String TapPhuThuocHam(String pth){
         String[] searchList = {"", "", "-->", "->", "\\?", ",", "\\}", "\\{", "\\(", "\\)", "\\=", "\\."};
         String[] replacementList = {"→", "→", "→", "→", "→", ";", "", "", "", "", "", ""};
         return StringUtils.replaceEach(pth, searchList, replacementList);
     }
 
-    // Tách phụ thuộc vào danh sách
-    public List<String> XuLyPhuThuocHam(String pth){
+    /** Tách phụ thuộc vào danh sách */
+    public static List<String> XuLyPhuThuocHam(String pth){
+        // TODO LOG
         List<String> listPTH = new ArrayList<>();
-
-        String[] searchList = {"", "", "-->", "->", "\\?", ",", "\\s", "\\}", "\\{", "\\(", "\\)", "\\.", "\\="};
+        String[] searchList = {"", "", "-->", "->", "?", ",", " ", "}", "{", "(", ")", ".", "="};
         String[] replacementList = {"→", "→", "→", "→", "→", ";", "", "", "", "", "", "", ""};
+
         // Thêm ký tự để tách các phụ thuộc hàm
         String pthClear = StringUtils.replaceEach(pth, searchList, replacementList).concat(";");
 
@@ -48,11 +54,12 @@ public class Handle {
                     "+) dấu phẩy: ");
             return null;
         }
+        LOGGER.info("ListPTH Xu ly: {}", listPTH);
         return listPTH; // trả về list pth
     }
 
-    // Loại bỏ phủ thuộc hàm xác định nhau
-    public List<String> BoThuocTinhPTHThua(List<String> listPTH){
+    /** Loại bỏ phủ thuộc hàm xác định nhau */
+    public static List<String> BoThuocTinhPTHThua(List<String> listPTH){
         List<String> listPTHDung = new ArrayList<>();
         for(String itemPTH : listPTH)
         {
@@ -73,8 +80,8 @@ public class Handle {
         return listPTHDung;
     }
 
-    /* Lấy vế trái phụ thuộc hàm */
-    public String VeTraiPTH(List<String> listPTH){
+    /** Lấy vế trái phụ thuộc hàm */
+    public static String VeTraiPTH(List<String> listPTH){
         String VeTraiPTH = ""; // Tập thuộc tính vế trái
         for (String pth : listPTH) {
             String VT = pth.split("→")[0];
@@ -90,8 +97,8 @@ public class Handle {
         return uniqueVeTraiPTH;
     }
 
-    /* Lấy vế phải phụ thuộc hàm */
-    public String VePhaiPTH(List<String> listPTH){
+    /** Lấy vế phải phụ thuộc hàm */
+    public static String VePhaiPTH(List<String> listPTH){
         String VePhaiPTH = ""; // Tập thuộc tính vế trái
         for (String pth : listPTH) {
             String VP = pth.split("→")[1];
@@ -108,8 +115,8 @@ public class Handle {
         return uniqueVePhaiPTH;
     }
 
-    // Tìm N: Tập thuộc nguồn tính không xuất hiện vế phải PTH
-    public String TapNguon(String baodong, String vephaiPTH){
+    /** Tìm N: Tập thuộc nguồn tính không xuất hiện vế phải PTH */
+    public static String TapNguon(String baodong, String vephaiPTH){
         String tapnguonPTH;
         tapnguonPTH = baodong;
         for (int i = 0; i < baodong.length(); i++) {
@@ -122,8 +129,8 @@ public class Handle {
         return tapnguonPTH;
     }
 
-    // Tìm M là tập thuộc tính trung gian xuất hiện cả hai bên
-    public String TapTrungGian(String vephaiPTH, String vetraiPTH){
+    /** Tìm M là tập thuộc tính trung gian xuất hiện cả hai bên */
+    public static String TapTrungGian(String vephaiPTH, String vetraiPTH){
         String taptrunggianPTH = "";
         for (int i = 0; i < vephaiPTH.length(); i++) {
             String indexPhai = String.valueOf(vephaiPTH.charAt(i));
@@ -134,8 +141,8 @@ public class Handle {
         return taptrunggianPTH;
     }
 
-    // Hàm xử lý tìm bao đóng
-    public String TimBaoDong(String thuoctinh, List<String> listPth) {
+    /** Hàm xử lý tìm bao đóng */
+    public static String TimBaoDong(String thuoctinh, List<String> listPth) {
         String BaoDongCanTim = thuoctinh;
         int kytuBDBatDau = BaoDongCanTim.length();
         for (int i = 0; i < listPth.size(); i++) {
@@ -171,8 +178,8 @@ public class Handle {
         return BaoDongCanTim;
     }
 
-    // Loại bỏ nhưng ký tứ giống nhau
-    public String uniqueKyTu(String kytu) {
+    /** Loại bỏ nhưng ký tứ giống nhau */
+    public static String uniqueKyTu(String kytu) {
         for (int i = 0; i < kytu.length(); i++) {
             for (int j = 0; j < kytu.length(); j++) {
                 String indexKyTuI = String.valueOf(kytu.charAt(i));
@@ -185,8 +192,8 @@ public class Handle {
         return kytu;
     }
 
-    // Loại bỏ nhưng ký tứ giống nhau
-    public String uniqueKyTuSapXep(String kytu) {
+    /** Loại bỏ nhưng ký tứ giống nhau */
+    public static String uniqueKyTuSapXep(String kytu) {
         String KytuSapXepUnique = "";
         for (int j = 0; j < kytu.length(); j++) {
             if (!KytuSapXepUnique.contains(String.valueOf(kytu.charAt(j)))) {
@@ -196,8 +203,8 @@ public class Handle {
         return KytuSapXepUnique;
     }
 
-    // Hội những tập trung gian M liền nhau theo thứ tự cho vào list
-    public List<String> listTapTrungGianLienNhau(String thuoctinhtrunggian) {
+    /** Hội những tập trung gian M liền nhau theo thứ tự cho vào list */
+    public static List<String> listTapTrungGianLienNhau(String thuoctinhtrunggian) {
         List<String> listTapTrungGianLienNhau = new ArrayList<>();
         // Tìm tập khóa NguonPTH
         String TapCon = "";
@@ -230,7 +237,7 @@ public class Handle {
         return listTapTrungGianLienNhau;
     }
 
-    public List<String> listTapTrungGianGhep(List<String> TapTrungGianLienNhau) {
+    public static List<String> listTapTrungGianGhep(List<String> TapTrungGianLienNhau) {
         List<String> TapTrungGianGhep = new ArrayList<>();
         for (String item1 : TapTrungGianLienNhau) {
             for (String item2 : TapTrungGianLienNhau) {
@@ -244,8 +251,8 @@ public class Handle {
         return TapTrungGianGhep;
     }
 
-    // Hàm xử lý lấy ra tất cả các tập con của thuốc tính trung gian của M
-    public List<String> listTapTrungGian(List<String> TapTrungGianGhep) {
+    /** Hàm xử lý lấy ra tất cả các tập con của thuốc tính trung gian của M */
+    public static List<String> listTapTrungGian(List<String> TapTrungGianGhep) {
         List<String> listTapHoiToiUu = new ArrayList<>();
         String chuoitapconchuatoituu= "";
         //System.out.println("--- chiều dài 2: " + listTapTrungGian.size());
@@ -277,7 +284,7 @@ public class Handle {
         return listTapHoiToiUu;
     }
 
-    public String SapXepKyTu(String thuoctinh) {
+    public static String SapXepKyTu(String thuoctinh) {
         String chuoidasapxep = "";
         if (thuoctinh.isEmpty()) {
             return chuoidasapxep;

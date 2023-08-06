@@ -1,6 +1,7 @@
 package vn.name.hoanhtuan.csdlsuport.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Builder;
 import lombok.Data;
 import vn.name.hoanhtuan.csdlsuport.common.EnumResultCode;
 

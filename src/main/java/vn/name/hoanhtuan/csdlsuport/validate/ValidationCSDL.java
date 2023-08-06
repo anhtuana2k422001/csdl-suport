@@ -4,6 +4,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import vn.name.hoanhtuan.csdlsuport.common.Constant;
+import vn.name.hoanhtuan.csdlsuport.common.EnumResultCode;
 
 import java.util.List;
 
@@ -11,15 +13,15 @@ import java.util.List;
 @Slf4j
 public class ValidationCSDL {
 
-    private static final String VALIDATE_PTH = "Phụ thuộc hàm không hợp lệ";
-
-    public boolean validatePTH(String tapPTH){
+    public static EnumResultCode validatePTH(String tapPTH){
+        LOGGER.info("TapPTH: {}", tapPTH);
 
         // Không nhận ký ký tự số
         for (int i = 0; i < tapPTH.length(); i++) {
-            if(tapPTH.charAt(i) <= 57 && tapPTH.charAt(i) >= 48){
-                LOGGER.info("Phụ thuộc hàm không nhận ký tự số  !");
-                return false;
+            int itemChar = tapPTH.charAt(i);
+            if(itemChar <= 57 && itemChar >= 48){
+                LOGGER.info(Constant.LOG_ITEM_PTH + EnumResultCode.DEPENDENCY_NUMBER_INVALID.getMessage(), itemChar);
+                return EnumResultCode.DEPENDENCY_NUMBER_INVALID;
             }
         }
 
@@ -34,30 +36,25 @@ public class ValidationCSDL {
                     || StringUtils.equalsAny(item, "", "", "?", "->", "-->", ".", ";", ",",
                     "→", "{", "}", " ", "(", ")", "=")){
                 if(i == tapPTH.length()-1){
-                    LOGGER.info("PTH hop le: {}", tapPTH);
+                    LOGGER.info(Constant.PHU_THUOC_HAM_VALID, tapPTH);
                 }
             }else{
-                LOGGER.info("Tập phụ thuộc hàm mới nhập không hợp lệ!. Chương trình chỉ phân biết được các ký tự trong bảng chữ cái " +
-                        "tiếng anh và một số ký tự hỗ trợ phụ thuộc hàm." + item + " là ký tự không nhận diện được");
-                LOGGER.info(String.valueOf(tapPTH.charAt(i)));
-                return false;
+                LOGGER.info(Constant.LOG_ITEM_PTH + EnumResultCode.DEPENDENCY_ERROR_LOGIC.getMessage(), itemChar);
+                return EnumResultCode.DEPENDENCY_ERROR_LOGIC;
             }
         }
-        return true;
+        return EnumResultCode.SUCCESS;
     }
 
-    public boolean validateInput(String baodong, List<String> listPTH){
+    public static EnumResultCode validateCLSD(String baodong, List<String> listPTH){
+        LOGGER.info("Baodong: {}, ListPTH: {}", baodong, listPTH);
 
         // Không nhập chữ cái đặc biệt ký hiệu
         for (int i = 0; i < baodong.length(); i++) {
-            if(baodong.charAt(i)== 85 || baodong.charAt(i) == 81 || baodong.charAt(i) == 70 ){
-                LOGGER.info("Tập thuộc tính không hợp lệ " +
-                        "Chú ý: Không dùng các ký tự ký hiệu của lược đồ quan hệ sau " +
-                        "+) F là ký hiệu phụ thuộc hàm " +
-                        "+) U, Q là ký hiệu tập thuộc tính " +
-                        "=> Giải quyết: Nếu đề bài yêu cầu dùng ký tự đó bạn có thể thay thế ký hiệu khác chưa dùng đến " +
-                        "trong tập thuộc tính và tập thuốc tính với tập phụ thuộc hàm phải đồng bộ");
-                return false;
+            int itemChar = baodong.charAt(i);
+            if(itemChar == 85 || itemChar == 81 || itemChar == 70 ){
+                LOGGER.info(Constant.LOG_ITEM_BAO_DONG + EnumResultCode.ATTRIBUTE_SET_ERROR_REG.getMessage(), itemChar);
+                return EnumResultCode.ATTRIBUTE_SET_ERROR_REG;
             }
         }
 
@@ -71,33 +68,22 @@ public class ValidationCSDL {
                     || itemCharAt == 61)
             {
                 if(i == baodong.length()-1){
-                    LOGGER.info("Bao dong hop le: {}", baodong);
+                    LOGGER.info(Constant.BAO_DONG_VALID, baodong);
                 }
             }else{
-                LOGGER.info("Tập thuộc tính mới nhập không hợp lệ! " +
-                        "Chương trình chỉ phân biết được các ký tự trong bảng chữ cái tiếng anh và một số ký tự sau: " +
-                        "dấu ngoặc mở: () " +
-                        "+) dấu phẩy: , " +
-                        "+) dấu chấm: . " +
-                        "+) dấu chấm phẩy: ; " +
-                        "+) dấu ngoặc ngọn: {} " +
-                        "+) dấu bằng: = ");
-                return false;
+                LOGGER.info(Constant.LOG_ITEM_BAO_DONG + EnumResultCode.ATTRIBUTE_SET_ERROR_LOGIC.getMessage(), itemCharAt);
+                return EnumResultCode.ATTRIBUTE_SET_ERROR_LOGIC;
             }
         }
 
-        if(baodong.isEmpty()){
-            LOGGER.info("Vui lòng nhập tập thuộc tính !");
-            return false;
-        }
 
         for(String item : listPTH){
             item = item.replace("→", "");
             for(int i=0; i< item.length(); i++){
                 String index = String.valueOf(item.charAt(i));
                 if(!baodong.contains(index)){
-                    LOGGER.info("Thuộc tính " + index +" của phụ thuộc không nằm trong với tập thuộc tính Q (U)");
-                    return false;
+                    LOGGER.info("index PTH: {} - "+ EnumResultCode.DEPENDENCY_ERROR.getMessage(), index);
+                    return EnumResultCode.DEPENDENCY_ERROR;
                 }
             }
 
@@ -105,23 +91,23 @@ public class ValidationCSDL {
 
         for (String pth : listPTH) {
             if(!pth.contains("→")){
-                LOGGER.info(VALIDATE_PTH);
-                return false;
+                LOGGER.info("PTH: {} - " + EnumResultCode.DEPENDENCY_INVALID.getMessage(), pth);
+                return EnumResultCode.DEPENDENCY_INVALID;
             }
             try{
                 String veTr = pth.split("→")[0];
                 String vePh = pth.split("→")[1];
                 if(veTr.isEmpty() || vePh.isEmpty()){
-                    LOGGER.info(VALIDATE_PTH);
-                    return false;
+                    LOGGER.info(EnumResultCode.DEPENDENCY_INVALID.getMessage());
+                    return EnumResultCode.DEPENDENCY_INVALID;
                 }
             }catch(Exception e){
-                LOGGER.info(VALIDATE_PTH);
-                return false;
+                LOGGER.info(EnumResultCode.DEPENDENCY_INVALID.getMessage());
+                return EnumResultCode.DEPENDENCY_INVALID;
             }
 
         }
-        return true;
+        return EnumResultCode.SUCCESS;
     }
 
 }
