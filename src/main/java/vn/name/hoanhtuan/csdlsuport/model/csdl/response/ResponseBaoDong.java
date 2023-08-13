@@ -10,11 +10,11 @@ import vn.name.hoanhtuan.csdlsuport.model.ResponseBase;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResponseCSDLSupport extends ResponseBase {
-    private DataCSDL data;
+public class ResponseBaoDong extends ResponseBase {
+    private String data;
 
     @Builder
-    public ResponseCSDLSupport(EnumResultCode enumResultCode, DataCSDL data) {
+    public ResponseBaoDong(EnumResultCode enumResultCode, String data) {
         super(enumResultCode);
         this.data = data;
     }

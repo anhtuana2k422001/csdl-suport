@@ -16,6 +16,7 @@ import vn.name.hoanhtuan.csdlsuport.model.RequestBase;
 public class RequestCSDLSupport extends RequestBase {
     private String attributeSet;
     private String dependencyChain;
+    private String detailExplanation;
 
     @Override
     public ErrorMessage validateInput(){
@@ -31,6 +32,11 @@ public class RequestCSDLSupport extends RequestBase {
         if(StringUtils.isBlank(dependencyChain)){
             return new ErrorMessage(EnumResultCode.REQUIRED_DEPENDENCY_CHAIN);
         }
+
+        if(StringUtils.isBlank(detailExplanation)){
+            return new ErrorMessage(EnumResultCode.REQUIRED_DEPENDENCY_CHAIN);
+        }
+
 
         return null;
     }
