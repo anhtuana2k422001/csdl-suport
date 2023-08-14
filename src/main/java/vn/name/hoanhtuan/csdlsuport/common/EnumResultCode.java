@@ -6,7 +6,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum EnumResultCode {
     SUCCESS("000", "Success"),
-    INVALID_REQUEST("001", "Invalid request"),
     SYSTEM_ERROR("999", "System Error"),
     PROPERTIES_ERROR("002", "Ký tự của thuộc tính tìm bao đóng không nằm trong tập thuốc tính Q(U)"),
     DEPENDENCY_NUMBER_INVALID("003", "Phụ thuộc hàm không nhận ký tự số !"),
@@ -17,11 +16,13 @@ public enum EnumResultCode {
     ATTRIBUTE_SET_ERROR_LOGIC("008", "Tập thuộc tính mới nhập không hợp lệ. Chương trình chỉ phân biết được các ký tự trong bảng chữ cái tiếng anh và một số ký tự sau: (1) dấu ngoặc mở: () - (2) dấu phẩy: , - (3) dấu chấm: . - (4) dấu chấm phẩy: ; - (5) dấu ngoặc ngọn: {} - (6) dấu bằng: ="),
 
     // INVALID REQUEST
-    INVALID_PARAM_REQUEST("REQUEST_001", "Đầu vào khoongg hợp lệ"),
-    REQUIRED_REQUEST_ID("REQUEST_002", "RequestId là bắt buộc"),
-    REQUIRED_ATTRIBUTE_SET("REQUEST_003", "AttributeSet là bắt buộc"),
-    REQUIRED_DEPENDENCY_CHAIN("REQUEST_004", "DependencyChain là bắt buộc"),
-    REQUIRED_PROPERTIES("REQUEST.005", "Properties là bắt buộc"),
+    INVALID_PARAM_REQUEST("100", "Đầu vào không hợp lệ"),
+    REQUIRED_REQUEST_ID("101", "RequestId là bắt buộc"),
+    REQUIRED_ATTRIBUTE_SET("103", "AttributeSet là bắt buộc"),
+    REQUIRED_DEPENDENCY_CHAIN("104", "DependencyChain là bắt buộc"),
+    REQUIRED_PROPERTIES("105", "Properties là bắt buộc"),
+    REQUIRED_DETAIL_EXPLANATION("106", "DetailExplanation là bắt buộc"),
+
     ;
     private final String code;
     private final String message;

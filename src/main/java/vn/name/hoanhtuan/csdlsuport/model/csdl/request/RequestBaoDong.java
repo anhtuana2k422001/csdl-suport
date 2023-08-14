@@ -13,7 +13,7 @@ import vn.name.hoanhtuan.csdlsuport.model.RequestBase;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class RequestBaoDong  extends RequestBase {
+public class RequestBaoDong extends RequestBase {
     private String attributeSet;
     private String dependencyChain;
     private String properties;
