@@ -16,6 +16,8 @@ import vn.name.hoanhtuan.csdlsuport.utils.CommonUtil;
 import vn.name.hoanhtuan.csdlsuport.utils.JacksonUtils;
 import vn.name.hoanhtuan.csdlsuport.utils.ResponseUtils;
 
+import java.util.UUID;
+
 
 @Slf4j
 @RestController
@@ -83,7 +85,18 @@ public class CSDLController {
 
     @GetMapping("danh-sach-luoc-do-mau")
     public ResponseEntity<ResponseBase> phanTichCSDL(){
-        return null;
+        ResponseBase response = new ResponseBase(EnumResultCode.SYSTEM_ERROR);
+        String requestId = UUID.randomUUID().toString();
+        CommonUtil.writeLogRequestId(requestId);
+
+        try {
+            response = csdlService.listExampleCSDL();
+        } catch (Exception ex) {
+            CommonUtil.handleException(ex);
+        }
+
+        LOGGER.info(Constant.RESPONSE_BODY, response);
+        return ResponseUtils.response(response);
     }
 
 }

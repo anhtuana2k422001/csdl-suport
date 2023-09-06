@@ -3,7 +3,7 @@ package vn.name.hoanhtuan.csdlsuport.model.csdl.response;
 import lombok.Data;
 
 @Data
-public class infoCSDL {
+public class InformationCSDL {
     private String tapThuocTinh;
     private String phuThuocHam;
     private String baodongLDQH;

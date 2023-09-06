@@ -12,23 +12,17 @@ import vn.name.hoanhtuan.csdlsuport.model.csdl.response.*;
 import vn.name.hoanhtuan.csdlsuport.service.CSDLService;
 import vn.name.hoanhtuan.csdlsuport.service.Handle;
 import vn.name.hoanhtuan.csdlsuport.validate.ValidationCSDL;
-
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @Slf4j
 public class CSDLServiceImpl implements CSDLService {
-    private static List<String> listToiThieuPTH = new ArrayList<>();// List khóa để xét DC
+    private List<String> listToiThieuPTH = new ArrayList<>();// List khóa để xét DC
     private static final List<String> listTapKhoa = new ArrayList<>();// List khóa để xét DC
+    private final InformationCSDL infoCSDL = new InformationCSDL();
     private boolean checkKhoaDuyNhat = false;
-    private String primaryKeyText = "";
-    private String minimalCoveText = "";
-    private String normalFormText = "";
-    private final infoCSDL infoCSDL = new infoCSDL();
-    private final Content primaryContent = new Content();
-    private final Content minimalCoveContent = new Content();
-    private final Content normalFormContent = new Content();
+
 
     @Override
     public ResponseBase timBaoDong(RequestBaoDong request) {
@@ -81,11 +75,6 @@ public class CSDLServiceImpl implements CSDLService {
 
     @Override
     public ResponseBase phanTichCSDL(RequestCSDLSupport request) {
-        primaryKeyText = "";
-        minimalCoveText = "";
-        normalFormText = "";
-
-        DataCSDL dataResponse;
         List<String> listPTH; // danh sách phụ thuộc hàm
         String tapPTH = request.getDependencyChain();
 
@@ -128,48 +117,20 @@ public class CSDLServiceImpl implements CSDLService {
         if(StringUtils.isEmpty(trungGianPTH))
             infoCSDL.setTapTrungGianM("{Ø}");
 
-        String kqKhoaDuyNhat = TimKhoaDuyNhat(nguonPTH, listPTH, baoDong, tapPTH);
-        if(StringUtils.isEmpty(kqKhoaDuyNhat))
-        {
-            checkKhoaDuyNhat = false;
-        }
-
-        String kqTapKhoa = TimTapKhoa(nguonPTH, baoDong, listPTH, trungGianPTH);
-        String ketquaKhoa = kqKhoaDuyNhat + kqTapKhoa;
+        Content kqKhoaDuyNhat = timkhoa(nguonPTH, listPTH, baoDong, tapPTH, trungGianPTH);
 
         // Tìm phu toi thieu
-
-        String ketquaFtt = PhuToiThieu(listPTH);
+        Content ketQuaFTT = phuToiThieu(listPTH);
 
         // Tìm dạng chuẩn
-        String ketquadangchuan = TimDangChuan(nguonPTH);
+        Content ketQuaDangVhuan = timDangChuan(nguonPTH);
 
-        primaryContent.setTitle("Dạng 1: Tìm Khóa");
-        minimalCoveContent.setTitle("Dạng 2: Tìm PTH tối thiểu");
-        normalFormContent.setTitle("Dạng 3: Tìm Dạng chuẩn");
-
-        if(request.getDetailExplanation().equalsIgnoreCase(Constant.DETAIL_EXPLANATION)){
-            primaryContent.setValue(ketquaKhoa);
-            minimalCoveContent.setValue(ketquaFtt);
-            normalFormContent.setValue(ketquadangchuan);
-
-            dataResponse = DataCSDL.builder()
-                    .primaryKey(primaryContent)
-                    .minimalCove(minimalCoveContent)
-                    .normalForm(normalFormContent)
-                    .build();
-        }else{
-            primaryContent.setValue(primaryKeyText);
-            minimalCoveContent.setValue(minimalCoveText);
-            normalFormContent.setValue(minimalCoveText);
-
-            dataResponse = DataCSDL.builder()
-                    .information(infoCSDL)
-                    .primaryKey(primaryContent)
-                    .minimalCove(minimalCoveContent)
-                    .normalForm(normalFormContent)
-                    .build();
-        }
+        DataCSDL dataResponse = DataCSDL.builder()
+                .information(infoCSDL)
+                .primaryKey(kqKhoaDuyNhat)
+                .minimalCove(ketQuaFTT)
+                .normalForm(ketQuaDangVhuan)
+                .build();
 
         return ResponseCSDLSupport.builder()
                 .enumResultCode(EnumResultCode.SUCCESS)
@@ -178,70 +139,103 @@ public class CSDLServiceImpl implements CSDLService {
     }
 
     // Hàm tìm phụ thuộc hàm tối thiểu
-    public String PhuToiThieu(List<String> listPTH) {
+    public Content phuToiThieu(List<String> listPTH) {
+        Content normalFormContent = new Content();
+        normalFormContent.setTitle("Dạng 2: Tìm PTH tối thiểu");
+        List<Detail> details = new ArrayList<>();
 
         // Trường hợp không có phụ thuộc hàm
         if (listPTH.isEmpty()) {
-            minimalCoveText = minimalCoveText.concat("\nVì không có phụ thuộc hàm");
-            minimalCoveText = minimalCoveText.concat("\n=> phụ thuộc hàm tối thiểu là: Ftt = {Ø}");
-            return "Phụ thuộc hàm tối thiểu là: Ftt = {Ø}";
+            Detail detail = new Detail();
+            List<String> text = new ArrayList<>();
+            detail.setStep("- Xét phụ thuộc hàm:");
+
+            text.add("Vì không có phụ thuộc hàm nào");
+            text.add("=> phụ thuộc hàm tối thiểu là: Ftt = {Ø}");
+
+            detail.setText(text);
+            details.add(detail);
+
+            normalFormContent.setValue(details);
+            normalFormContent.setResult("Phụ thuộc hàm tối thiểu là: Ftt = {Ø}");
+
+            return normalFormContent;
         }
 
         // trường hợp chỉ có 1 PTh mà không thể phân rã
         if (listPTH.size() == 1) {
             String vePh = listPTH.get(0).split("→")[1];
             if (vePh.length() == 1) {
-                minimalCoveText = minimalCoveText.concat("\nVì chỉ có 1 phụ thuộc hàm");
-                minimalCoveText = minimalCoveText.concat("\n=> Phụ thuộc hàm tối thiểu là: Ftt = { " + listPTH.get(0) + " }");
-                listToiThieuPTH = listPTH; // gán vào list tối thiểu public
-                return "Phụ thuộc hàm tối thiểu là: Ftt = { " + listPTH.get(0) + " }";
+                Detail detail = new Detail();
+                List<String> text = new ArrayList<>();
+                detail.setStep("- Xét phụ thuộc hàm");
+
+                text.add("Vì chỉ có 1 phụ thuộc hàm => phụ thuộc hàm tối thiểu là: Ftt = {Ø}");
+                text.add("Phụ thuộc hàm tối thiểu là: Ftt = { " + listPTH.get(0) + " }");
+
+                detail.setText(text);
+                details.add(detail);
+
+                normalFormContent.setValue(details);
+                normalFormContent.setResult("Phụ thuộc hàm tối thiểu là: Ftt = {Ø}");
+
+                return normalFormContent;
             }
         }
         //=== Bước 1:  Phân rã phụ thuộc hàm ở vế phải
-        List<String> listPTHPhanRa = new ArrayList(); // phân rã PTH ở vế phải
+        List<String> listPTHPhanRa = new ArrayList<>(); // phân rã PTH ở vế phải
         for (String pth : listPTH) {
-            String VT = pth.split("→")[0];
-            String VP = pth.split("→")[1];
+            String veTrai = pth.split("→")[0];
+            String vePhai = pth.split("→")[1];
             String itemF = "";
-            itemF = itemF.concat(VT).concat("→");
-            for (int i = 0; i < VP.length(); i++) {
-                String indexVP = String.valueOf(VP.charAt(i));
+            itemF = itemF.concat(veTrai).concat("→");
+            for (int i = 0; i < vePhai.length(); i++) {
+                String indexVP = String.valueOf(vePhai.charAt(i));
                 itemF = itemF.concat(indexVP);
                 listPTHPhanRa.add(itemF);
                 itemF = itemF.replace(indexVP, "");
             }
         }
-        String FToiThieu = "";
+        String fToiThieu = "";
         for (int i = 0; i < listPTHPhanRa.size(); i++) {
-            FToiThieu = FToiThieu.concat(listPTHPhanRa.get(i));
+            fToiThieu = fToiThieu.concat(listPTHPhanRa.get(i));
             if (i != listPTHPhanRa.size() - 1) {
-                FToiThieu = FToiThieu.concat(", ");
+                fToiThieu = fToiThieu.concat(", ");
             }
         }
-        minimalCoveText = minimalCoveText.concat("\n--Bước 1: Phân rã \n\tF1 = {" + FToiThieu + "}");
 
-        minimalCoveText = minimalCoveText.concat("\n--Bước 2: Loại bỏ vế trái dư thừa:");
+        Detail detail1 = new Detail();
+        List<String> text1 = new ArrayList<>();
+        detail1.setStep("Bước 1: Phân rã phụ thuộc hàm");
+        text1.add("Kết quả: F1 = {" + fToiThieu + "}");
+        detail1.setText(text1);
+        details.add(detail1);
+
+        Detail detail2 = new Detail();
+        List<String> text2 = new ArrayList<>();
+        detail2.setStep("Buoc 2: Loại bỏ vế trái dư thừa");
+
         //=== Bước 2:  Lược bỏ vế trái PTH
         String checkPTHUnique = "";
-        List<String> listPTHBoVT = new ArrayList();
-        List<String> listPTHBoVTUnique = new ArrayList();
+        List<String> listPTHBoVT = new ArrayList<>();
+        List<String> listPTHBoVTUnique = new ArrayList<>();
         for (String pth : listPTHPhanRa) {
-            String VT = pth.split("→")[0];
-            String VP = pth.split("→")[1];
+            String veTrai = pth.split("→")[0];
+            String vePhai = pth.split("→")[1];
             String itemF = pth; // loại bỏ PTH vế trái
-            if (VT.length() > 1) {
-                minimalCoveText = minimalCoveText.concat("\n - Xét: " + pth + ":");
-                for (int i = 0; i < VT.length(); i++) {
-                    String indexVT = String.valueOf(VT.charAt(i));
-                    String conlaiVT = VT;
+            if (veTrai.length() > 1) {
+                text2.add(" - Xét: " + pth + ":");
+                for (int i = 0; i < veTrai.length(); i++) {
+                    String indexVT = String.valueOf(veTrai.charAt(i));
+                    String conlaiVT = veTrai;
                     conlaiVT = conlaiVT.replace(indexVT, "");
                     String baodong = Handle.TimBaoDong(conlaiVT, listPTHPhanRa);
-                    if (baodong.contains(VP)) {
-                        minimalCoveText = minimalCoveText.concat("\n\tNếu bỏ " + indexVT + ": {" + conlaiVT + "}+ = " + baodong + " có chứa " + VP + " => " + indexVT + " dư thừa");
+                    if (baodong.contains(vePhai)) {
+                        text2.add("Nếu bỏ " + indexVT + ": {" + conlaiVT + "}+ = " + baodong + " có chứa " + vePhai + " => " + indexVT + " dư thừa");
                         itemF = "";
-                        itemF = itemF.concat(conlaiVT).concat("→").concat(VP);
+                        itemF = itemF.concat(conlaiVT).concat("→").concat(vePhai);
                     } else {
-                        minimalCoveText = minimalCoveText.concat("\n\tNếu bỏ " + indexVT + ": {" + conlaiVT + "}+ = " + baodong + " không chứa " + VP + " => " + indexVT + " dư thừa");
+                        text2.add("Nếu bỏ " + indexVT + ": {" + conlaiVT + "}+ = " + baodong + " không chứa " + vePhai + " => " + indexVT + " dư thừa");
                     }
                 }
             }
@@ -253,94 +247,117 @@ public class CSDLServiceImpl implements CSDLService {
             listPTHBoVT.add(itemF); // chưa tối ưu
         }
 
-        FToiThieu = ""; // Gán lại bằng rỗng
+
+        fToiThieu = ""; // Gán lại bằng rỗng
         for (int i = 0; i < listPTHBoVTUnique.size(); i++) {
-            FToiThieu = FToiThieu.concat(listPTHBoVTUnique.get(i));
+            fToiThieu = fToiThieu.concat(listPTHBoVTUnique.get(i));
             if (i != listPTHBoVTUnique.size() - 1) {
-                FToiThieu = FToiThieu.concat(", ");
+                fToiThieu = fToiThieu.concat(", ");
             }
         }
 
         if (listPTHBoVT.size() > listPTHBoVTUnique.size()) {
-            String FpthBoVT = ""; // Gán lại bằng rỗng
+            String fPthBoVT = ""; // Gán lại bằng rỗng
             for (int i = 0; i < listPTHBoVT.size(); i++) {
-                FpthBoVT = FpthBoVT.concat(listPTHBoVT.get(i));
+                fPthBoVT = fPthBoVT.concat(listPTHBoVT.get(i));
                 if (i != listPTHBoVT.size() - 1) {
-                    FpthBoVT = FpthBoVT.concat(", ");
+                    fPthBoVT = fPthBoVT.concat(", ");
                 }
             }
-            if (FToiThieu.length() != FpthBoVT.length()) {
-                minimalCoveText = minimalCoveText.concat("\n=>Sau khi loại bỏ dưa thừa VT là: F1 = {" + FpthBoVT + "}");
+            if (fToiThieu.length() != fPthBoVT.length()) {
+                text2.add("=> Sau khi loại bỏ dưa thừa VT là: F1 = {" + fPthBoVT + "}");
             }
         }
 
         // Xuất kết quả bước 2
-        minimalCoveText = minimalCoveText.concat("\nVậy F2 = {" + FToiThieu + "}");
+        text2.add("Kết quả: F2 = {" + fToiThieu + "}");
+        detail2.setText(text2);
+        details.add(detail2);
+
 
         //=== Bước 3: Lược bỏ PTH dư thừa
-        minimalCoveText = minimalCoveText.concat("\n--Bước 3: Loại bỏ PTH dư thừa:");
+        Detail detail3 = new Detail();
+        List<String> text3 = new ArrayList<>();
+        detail3.setStep("Buoc 3: Lược bỏ PTH dư thừa");
 
         // Trường hợp chỉ có 1 PTH
         if (listPTHBoVTUnique.size() == 1) {
-            minimalCoveText = minimalCoveText.concat("\nChỉ còn lại có 1 phụ thuộc hàm");
-            minimalCoveText = minimalCoveText.concat("\n=> Phụ thuộc hàm tối thiểu là: Ftt = { " + FToiThieu + " }");
             listToiThieuPTH = listPTHBoVTUnique;
-            return "=> Phụ thuộc hàm tối thiểu là: Ftt = { " + FToiThieu + " }";
+            text3.add("Chỉ còn lại có 1 phụ thuộc hàm");
+            detail3.setText(text3);
+            details.add(detail3);
+            normalFormContent.setValue(details);
+            normalFormContent.setResult("Phụ thuộc hàm tối thiểu là: Ftt = { " + fToiThieu + " }");
+
+            return normalFormContent;
         }
 
-        List<String> listPTHBoPTH = new ArrayList();
         // Sao chép list
-        for (String item : listPTHBoVTUnique) {
-            listPTHBoPTH.add(item);
-        }
+        List<String> listPTHBoPTH = new ArrayList<>(listPTHBoVTUnique);
 
-        List<String> listPTHToiThieu = new ArrayList();
+        List<String> listPTHToiThieu = new ArrayList<>();
         // Xử lý loại bỏ
         int vitri = 0;
         String itemFtt = "";
         String itemCuoi = listPTHBoVTUnique.get(listPTHBoVTUnique.size() - 1); // Thay thế cho vị trí xóa
         for (String pth : listPTHBoVTUnique) {
-            String VT = pth.split("→")[0];
-            String VP = pth.split("→")[1];
-            String itemF = pth;
+            String veTrai = pth.split("→")[0];
+            String vePhai = pth.split("→")[1];
             listPTHBoPTH.remove(vitri);
             if (pth.equals(itemCuoi)) { // Nếu xét PTH cuối
                 listPTHBoPTH.remove(0); // Thay đổi PTH đầu tiên bằng PTh không dư thừa đã xác định
                 listPTHBoPTH.add(0, itemFtt);
             }
-            String baodong = Handle.TimBaoDong(VT, listPTHBoPTH);
-            if (baodong.contains(VP)) {
+            String baodong = Handle.TimBaoDong(veTrai, listPTHBoPTH);
+            if (baodong.contains(vePhai)) {
                 if (itemFtt.isEmpty()) {
                     listPTHBoPTH.add(vitri, itemCuoi);
                 } else {
                     listPTHBoPTH.add(vitri, itemFtt);
                 }
-                minimalCoveText = minimalCoveText.concat("\n  Nếu xóa " + pth + " khỏi F2 thì:\t{" + VT + "}+ = " + baodong + " có chứa " + VP + "   =>" + pth + " dư thừa");
+                text3.add("Nếu xóa " + pth + " khỏi F2 thì: {" + veTrai + "}+ = " + baodong + " có chứa " + vePhai + " =>" + pth + " dư thừa");
             } else {
-                listPTHBoPTH.add(vitri, itemF);
-                minimalCoveText = minimalCoveText.concat("\n  Nếu xóa " + pth + " khỏi F2 thì:\t{" + VT + "}+ = " + baodong + " không chứa " + VP + "   =>" + pth + " không dư thừa");
-                listPTHToiThieu.add(itemF);
+                listPTHBoPTH.add(vitri, pth);
+                text3.add("Nếu xóa " + pth + " khỏi F2 thì: {" + veTrai + "}+ = " + baodong + " không chứa " + vePhai + " =>" + pth + " không dư thừa");
+                listPTHToiThieu.add(pth);
                 if (itemFtt.isEmpty()) {
-                    itemFtt = itemF; // Chưa có thì gán 1 lần đầu để thay thế
+                    itemFtt = pth; // Chưa có thì gán 1 lần đầu để thay thế
                 }
             }
             vitri++;
         }
 
-        FToiThieu = ""; // Gán lại bằng rỗng
+        fToiThieu = ""; // Gán lại bằng rỗng
         for (int i = 0; i < listPTHToiThieu.size(); i++) {
-            FToiThieu = FToiThieu.concat(listPTHToiThieu.get(i));
+            fToiThieu = fToiThieu.concat(listPTHToiThieu.get(i));
             if (i != listPTHToiThieu.size() - 1) {
-                FToiThieu = FToiThieu.concat(", ");
+                fToiThieu = fToiThieu.concat(", ");
             }
         }
-        minimalCoveText = minimalCoveText.concat("\nKết luận F tối thiểu là:  Ftt = { " + FToiThieu + " }");
 
         listToiThieuPTH = listPTHToiThieu;// gán để dụng kế thừa tìm dạng chuẩn
-        return "Phụ thuộc hàm tối thiểu là: Ftt = { " + FToiThieu + " }";
+        text3.add("Kết quả: F3 = { " + fToiThieu + " }");
+        detail3.setText(text3);
+        details.add(detail3);
+        normalFormContent.setValue(details);
+        normalFormContent.setResult("Kết luận: F tối thiểu là Ftt = { " + fToiThieu + " }");
+
+        return normalFormContent;
     }
 
-    private String TimKhoaDuyNhat(String nguonPTH, List<String> listPTH, String baoDong, String phuThuocHam) {
+    private Content timkhoa(String nguonPTH, List<String> listPTH, String baoDong, String phuThuocHam, String trungGianPTH) {
+        String tapKhoa = "";
+        String thuoctinhM = "";
+
+        Content normalFormContent = new Content();
+        normalFormContent.setTitle("Dạng 1: Tìm Khóa");
+        List<Detail> details = new ArrayList<>();
+
+        Detail detail = new Detail();
+        List<String> text = new ArrayList<>();
+        detail.setStep("Bước 1: Xét TH khóa duy nhất ");
+
+
         String baoDongNguon = Handle.TimBaoDong(nguonPTH, listPTH); //Gọi
         infoCSDL.setTapThuocTinh("Q = (" + baoDong + ")");
 
@@ -348,15 +365,21 @@ public class CSDLServiceImpl implements CSDLService {
         if (tapPTH.isEmpty()) {
             tapPTH = "Ø";
         }
-        infoCSDL.setPhuThuocHam("F = {" + tapPTH + "}");
+        infoCSDL.setPhuThuocHam("F = " + tapPTH );
 
         String thuoctinh = "";
         if (listPTH.isEmpty()) {
-            primaryKeyText = primaryKeyText.concat("Vì không có phụ thuộc hàm nên " + baoDong + " là siêu khóa");
             checkKhoaDuyNhat = true;
-            return  "Lược đồ có siêu khóa: " + baoDong;
+
+            text.add("Vì không có phụ thuộc hàm nên " + baoDong + " là siêu khóa");
+            detail.setText(text);
+            details.add(detail);
+            normalFormContent.setValue(details);
+            normalFormContent.setResult("Lược đồ có siêu khóa: " + baoDong);
+
+            return normalFormContent;
         } else {
-            if (nguonPTH.length() != 0) {
+            if (!nguonPTH.isEmpty()) {
                 for (int i = 0; i < nguonPTH.length(); i++) {
                     thuoctinh = thuoctinh.concat(String.valueOf(nguonPTH.charAt(i)));
                     if (i != nguonPTH.length() - 1) {
@@ -364,199 +387,271 @@ public class CSDLServiceImpl implements CSDLService {
                     }
                 }
                 String title = thuoctinh.concat(" là thuộc tính không xuất hiến bên vế phải");
-                primaryKeyText = primaryKeyText.concat(title);
-                primaryKeyText = primaryKeyText.concat("\n=> N = {" + thuoctinh + "}");
+                text.add(title);
+                text.add("=> N = {" + thuoctinh + "}");
+
                 if (baoDong.length() == baoDongNguon.length()) {
-                    primaryKeyText = primaryKeyText.concat("\n{" + nguonPTH + "}+ = " + baoDongNguon + " = Q+");
-                    primaryKeyText = primaryKeyText.concat("\nVậy Q có khóa duy nhất là: K = N = {" + thuoctinh.replace(", ", "") + "}");
                     checkKhoaDuyNhat = true;
+                    text.add("{" + nguonPTH + "}+ = " + baoDongNguon + " = Q+");
+                    text.add("Vậy Q có khóa duy nhất là: K = N = {" + thuoctinh.replace(", ", "") + "}");
+                    detail.setText(text);
+                    details.add(detail);
+                    normalFormContent.setValue(details);
+                    normalFormContent.setResult("Lược đồ có 1 khóa duy nhất: " + thuoctinh.replace(", ", ""));
+
+                    return normalFormContent;
+
                 } else {
-                    primaryKeyText = primaryKeyText.concat("\n{" + nguonPTH + "}+ = " + baoDongNguon + " ≠ Q+");
-                    checkKhoaDuyNhat = false;
-                    return StringUtils.EMPTY;
+                    text.add("{" + nguonPTH + "}+ = " + baoDongNguon + " ≠ Q+");
+                    detail.setText(text);
+                    details.add(detail);
+                    normalFormContent.setValue(details);
                 }
             } else {
                 thuoctinh = "Không có thuộc tính nào mà không xuất hiện bên vế phải";
-                primaryKeyText = primaryKeyText.concat(thuoctinh);
-                primaryKeyText = primaryKeyText.concat("\n=> N = {Ø}");
-                checkKhoaDuyNhat = false;
-                return StringUtils.EMPTY;
+                text.add(thuoctinh);
+                text.add("=> N = {Ø}");
+                detail.setText(text);
+                details.add(detail);
+                normalFormContent.setValue(details);
             }
         }
 
-        // Trường hợp có 1 PTH
-         return "Lược đồ có 1 khóa duy nhất: " + thuoctinh.replace(", ", "");
-    }
-    // Hàm tìm tập khóa hội Tập nguồn với Tập trung gian
-    private String TimTapKhoa(String NguonPTH, String BaoDong, List<String> listPTH, String TrungGianPTH) {
-        String TapKhoa = "";
-        String thuoctinhM = "";
-        if (checkKhoaDuyNhat == false) {
-            for (int i = 0; i < TrungGianPTH.length(); i++) {
-                thuoctinhM = thuoctinhM.concat(String.valueOf(TrungGianPTH.charAt(i)));
-                if (i != TrungGianPTH.length() - 1) {
-                    thuoctinhM = thuoctinhM.concat(", ");
-                }
+
+        // Trường hợp có tập khóa
+        Detail detail1 = new Detail();
+        List<String> text1 = new ArrayList<>();
+        detail1.setStep("Bước 2: Xét TH có tập khóa");
+
+        for (int i = 0; i < trungGianPTH.length(); i++) {
+            thuoctinhM = thuoctinhM.concat(String.valueOf(trungGianPTH.charAt(i)));
+            if (i != trungGianPTH.length() - 1) {
+                thuoctinhM = thuoctinhM.concat(", ");
             }
-            primaryKeyText = primaryKeyText.concat("\nTa có: M =  {" + thuoctinhM + "}" + " là thuộc tính xuất hiến cả hai vế \n");
-            primaryKeyText = primaryKeyText.concat("Bao đóng tập hội của Mi với N là: ");
-            String TapConM = thuoctinhM.replace(", ", "");
-            TapConM =  Handle.SapXepKyTu(TapConM);
-            // Hội lại để tìm tất cả tập con của M
-            List<String> listTapKhoaHienTai = new ArrayList<>(); // Khai báo
+        }
 
-            List<String> listThuocTinhGhep = Handle.listTapTrungGianLienNhau(TapConM);
-            List<String> listTapHoi = Handle.listTapTrungGianGhep(listThuocTinhGhep);
-            List<String> listTapTrungGian = Handle.listTapTrungGian(listTapHoi);
-            for (int i = 0; i < listTapTrungGian.size(); i++) {
-                String temp = "";
-                temp = temp.concat(NguonPTH).concat(listTapTrungGian.get(i));
+        text1.add("Ta có: M =  {" + thuoctinhM + "}" + " là thuộc tính xuất hiến cả hai vế ");
+        text1.add("Bao đóng tập hội của Mi với N là: ");
 
-                // Kiểm tra Mi hội N có chứa khóa trước đó hay không
-                boolean checkSieuKhoa = false;
-                for (String khoa : listTapKhoaHienTai) {
-                    int ChieuDaiKhoa = 0;
-                    for (int j = 0; j < khoa.length(); j++) {
-                        String itemKhoa = String.valueOf(khoa.charAt(j));
-                        if (temp.contains(itemKhoa)) {
-                            ChieuDaiKhoa++;
-                        }
-                    }
-                    if (ChieuDaiKhoa == khoa.length()) {
-                        //Tức là các Mi hội N này duyệt thấy đã chứa đủ số ký tự khóa
-                        checkSieuKhoa = true;
-                    }
-                }
+        String tapConM = thuoctinhM.replace(", ", "");
+        tapConM =  Handle.SapXepKyTu(tapConM);
+        // Hội lại để tìm tất cả tập con của M
+        List<String> listTapKhoaHienTai = new ArrayList<>(); // Khai báo
 
-                if (checkSieuKhoa == false) {
-                    primaryKeyText = primaryKeyText.concat("\n- Xét " + temp + ": {" + temp + "}+ = ");
-                    String baodongMi = Handle.TimBaoDong(temp, listPTH);
-                    if (baodongMi.length() == BaoDong.length()) {
-                        primaryKeyText = primaryKeyText.concat(baodongMi + " = Q+ => là khóa");
-                        listTapKhoaHienTai.add(temp);
-                    } else {
-                        primaryKeyText = primaryKeyText.concat(baodongMi + " ≠ Q+");
-                    }
-                }
+        List<String> listThuocTinhGhep = Handle.listTapTrungGianLienNhau(tapConM);
+        List<String> listTapHoi = Handle.listTapTrungGianGhep(listThuocTinhGhep);
+        List<String> listTapTrungGian = Handle.listTapTrungGian(listTapHoi);
+        for (int i = 0; i < listTapTrungGian.size(); i++) {
+            String temp = "";
+            temp = temp.concat(nguonPTH).concat(listTapTrungGian.get(i));
 
-                if (i == listTapTrungGian.size() - 1) {
-                    primaryKeyText = primaryKeyText.concat("\n- Các thuộc tính Mi hội N còn lại chứa khóa ở trên nên là siêu khóa sẽ không cần xét.");
-                }
-            }
-
-            // Xuất ra các khoa của lược đồ Q
-            String ChuoiKhoa = "";
-            for (int i = 0; i < listTapKhoaHienTai.size(); i++) {
-                ChuoiKhoa = ChuoiKhoa.concat(listTapKhoaHienTai.get(i));
-                if (i != listTapKhoaHienTai.size() - 1) {
-                    ChuoiKhoa = ChuoiKhoa.concat(", ");
-                }
-            }
-
-            // Đừa vào list để xét dạng chuẩn
+            // Kiểm tra Mi hội N có chứa khóa trước đó hay không
+            boolean checkSieuKhoa = false;
             for (String khoa : listTapKhoaHienTai) {
-                listTapKhoa.clear();
-                listTapKhoa.add(khoa);
+                int chieuDaiKhoa = 0;
+                for (int j = 0; j < khoa.length(); j++) {
+                    String itemKhoa = String.valueOf(khoa.charAt(j));
+                    if (temp.contains(itemKhoa)) {
+                        chieuDaiKhoa++;
+                    }
+                }
+                if (chieuDaiKhoa == khoa.length()) {
+                    //Tức là các Mi hội N này duyệt thấy đã chứa đủ số ký tự khóa
+                    checkSieuKhoa = true;
+                }
             }
-            primaryKeyText = primaryKeyText.concat("\n=> Vậy lược đồ Q có " + listTapKhoaHienTai.size() + " khóa là: " + ChuoiKhoa);
-            TapKhoa = TapKhoa.concat("Lược đồ trên có " + listTapKhoaHienTai.size() + " khóa là: " + ChuoiKhoa);
+
+            if (!checkSieuKhoa) {
+                String baodongMi = Handle.TimBaoDong(temp, listPTH);
+                if (baodongMi.length() == baoDong.length()) {
+                    text1.add("+) Xét " + temp + ": {" + temp + "}+ = " + baodongMi + " = Q+ => là khóa");
+                    listTapKhoaHienTai.add(temp);
+                } else {
+                    text1.add("+) Xét " + temp + ": {" + temp + "}+ = " + baodongMi + " ≠ Q+");
+                }
+            }
+
+            if (i == listTapTrungGian.size() - 1) {
+                text1.add("=> Các thuộc tính Mi hội N còn lại chứa khóa ở trên nên là siêu khóa sẽ không cần xét");
+            }
         }
-        return TapKhoa;
+
+        // Xuất ra các khoa của lược đồ Q
+        String chuoiKhoa = "";
+        for (int i = 0; i < listTapKhoaHienTai.size(); i++) {
+            chuoiKhoa = chuoiKhoa.concat(listTapKhoaHienTai.get(i));
+            if (i != listTapKhoaHienTai.size() - 1) {
+                chuoiKhoa = chuoiKhoa.concat(", ");
+            }
+        }
+
+        // Đừa vào list để xét dạng chuẩn
+        for (String khoa : listTapKhoaHienTai) {
+            listTapKhoa.clear();
+            listTapKhoa.add(khoa);
+        }
+
+        text1.add("Kết quả: lược đồ Q có " + listTapKhoaHienTai.size() + " khóa là: " + chuoiKhoa);
+        tapKhoa = tapKhoa.concat("Lược đồ trên có " + listTapKhoaHienTai.size() + " khóa là: " + chuoiKhoa);
+
+        detail1.setText(text1);
+        details.add(detail1);
+        normalFormContent.setValue(details);
+        normalFormContent.setResult("Kết luận: " + tapKhoa);
+
+        return normalFormContent;
     }
 
-    public String TimDangChuan(String NguonPTH) {
-        String dangchuancaonhat;
+    public Content timDangChuan(String nguonPTH) {
+        Content normalFormContent = new Content();
+        normalFormContent.setTitle("Dạng 3: Tìm Dạng chuẩn");
+        List<Detail> details = new ArrayList<>();
 
         boolean checkDC2 = true;
         boolean checkDC3 = true;
         boolean checkDCBC = true;
 
         if (listToiThieuPTH.isEmpty()) {
-            normalFormText = normalFormText.concat("\nVì lược đồ không có 0 phụ thuộc hàm nào");
-            normalFormText = normalFormText.concat("\n=> Kết luận: Lược đồ đạt dạng chuẩn BCNF.");
-            dangchuancaonhat = "Lược đồ đạt dạng chuẩn BCNF";
-            return dangchuancaonhat;
+            Detail detail = new Detail();
+            List<String> text = new ArrayList<>();
+            detail.setStep("Xét dạng chuẩn: ");
+            text.add("Vì lược đồ không có 0 phụ thuộc hàm nào");
+            detail.setText(text);
+            details.add(detail);
+            normalFormContent.setValue(details);
+            normalFormContent.setResult("Kết luận: Lược đồ đạt dạng chuẩn BCNF.");
+            return normalFormContent;
+
         } else {
-            normalFormText = normalFormText.concat("\n-Xét dạng chuẩn 1: \n\tVì mọi thuộc tính Q đều là thuộc tính đơn =>Đạt dạng chuẩn 1NF");
-            if (checkKhoaDuyNhat == true) { // có 1 khóa
+            Detail detail1 = new Detail();
+            List<String> text1 = new ArrayList<>();
+            detail1.setStep("Xét dạng chuẩn 1 ");
+            text1.add("Vì mọi thuộc tính Q đều là thuộc tính đơn =>Đạt dạng chuẩn 1NF");
+            detail1.setText(text1);
+            details.add(detail1);
+            if (checkKhoaDuyNhat) { // có 1 khóa
                 listTapKhoa.clear();
-                listTapKhoa.add(NguonPTH);
+                listTapKhoa.add(nguonPTH);
             }
 
             // Xét dạng chuẩn 2
-            normalFormText = normalFormText.concat("\n-Xét dạng chuẩn 2: ");
+            Detail detail2 = new Detail();
+            List<String> text2 = new ArrayList<>();
+            detail2.setStep("Xét dạng chuẩn 2:");
             for (String pth : listToiThieuPTH) {
-                String VT = pth.split("→")[0];
-                String VP = pth.split("→")[1];
+                String veTrai = pth.split("→")[0];
+                String vePhai = pth.split("→")[1];
                 for (String khoa : listTapKhoa) {
-                    if (khoa.length() > VT.length()) {
-                        if (khoa.contains(VT) && !khoa.contains(VP)) {
-                            normalFormText = normalFormText.concat("\n\t+) Xét phụ thuộc hàm " + pth + " có: \n\t   " + VP + " là thuộc tính không khóa và " + VT + " là thuộc tính khóa của khóa " + khoa + " => Vi phạm dạng chuẩn 2");
-                            checkDC2 = false; // Vi phạm
-                        }
+                    if (khoa.length() > veTrai.length() && (khoa.contains(veTrai) && !khoa.contains(vePhai))) {
+                        text2.add("+) Xét phụ thuộc hàm " + pth + " có:");
+                        text2.add(vePhai + " là thuộc tính không khóa và " + veTrai + " là thuộc tính khóa của khóa " + khoa + " => Vi phạm dạng chuẩn 2");
+                        checkDC2 = false; // Vi phạm
                     }
                 }
             }
 
             if (!checkDC2) {
-                normalFormText = normalFormText.concat("\n=> Vậy lược đồ quan hệ chỉ đạt dạng chuẩn 1NF");
-                dangchuancaonhat = "Lược đồ đạt dạng chuẩn 1NF";
-                return dangchuancaonhat;
+                detail2.setText(text2);
+                details.add(detail2);
+                normalFormContent.setValue(details);
+                normalFormContent.setResult("Kết luận: Vậy lược đồ quan hệ chỉ đạt dạng chuẩn 1NF.");
+                return normalFormContent;
             }
-            normalFormText = normalFormText.concat("\n\tVì mọi thuộc tính không khóa đều phụ thuộc đầy đủ vào khóa =>Đạt dạng chuẩn 2NF");
+
+            text2.add("Vì mọi thuộc tính không khóa đều phụ thuộc đầy đủ vào khóa =>Đạt dạng chuẩn 2NF");
+            detail2.setText(text2);
+            details.add(detail2);
 
             // Xét dạng chuẩn 3
-            normalFormText = normalFormText.concat("\n-Xét dạng chuẩn 3: ");
+            Detail detail3 = new Detail();
+            List<String> text3 = new ArrayList<>();
+            detail3.setStep("Xét dạng chuẩn 3:");
             for (String pthtt : listToiThieuPTH) {
-                String VT = pthtt.split("→")[0];
-                String VP = pthtt.split("→")[1];
-                if (!VT.contains(VP)) { // VP không thuộc Vt
+                String veTrai = pthtt.split("→")[0];
+                String vePhai = pthtt.split("→")[1];
+                if (!veTrai.contains(vePhai)) { // VP không thuộc Vt
                     for (String khoa : listTapKhoa) {
-                        if (khoa.equals(VT) || khoa.contains(VP)) {
-                            //checkDC3 = true; // đúng
+                        if (khoa.equals(veTrai) || khoa.contains(vePhai)) {
+                            //checkDC3 = true;  Đúng
                         } else {
                             checkDC3 = false;
-                            normalFormText = normalFormText.concat("\n\t Xét " + pthtt + ": thuộc tính vế trái " + VT + " không là một siêu khóa và thuộc tính vế phải " + VP + " không là 1 thuộc tính khóa \n\t => Vi phạm dạng chuẩn 3\n");
+                            text3.add("+) Xét phụ thuộc hàm " + pthtt + ":");
+                            text3.add("Thuộc tính vế trái " + veTrai + " không là một siêu khóa và thuộc tính vế phải " + vePhai + " không là 1 thuộc tính khóa  => Vi phạm dạng chuẩn 3");
                         }
                     }
                 }
             }
 
             if (!checkDC3) {
-                normalFormText = normalFormText.concat("\n=> Vậy Lược đồ quan hệ chỉ đạt dạng chuẩn 2");
-                dangchuancaonhat = "Lược đồ đạt dạng chuẩn 2NF";
-                return dangchuancaonhat;
+                detail3.setText(text3);
+                details.add(detail3);
+                normalFormContent.setValue(details);
+                normalFormContent.setResult("Kết luận: Vậy Lược đồ quan hệ chỉ đạt dạng chuẩn 2");
+                return normalFormContent;
             }
-            normalFormText = normalFormText.concat("\n\tVì mọi thuộc tính không khóa đều không phụ thuộc bắc cầu vào một khóa nào =>Đạt dạng chuẩn 3NF");
+
+            text3.add("Vì mọi thuộc tính không khóa đều không phụ thuộc bắc cầu vào một khóa nào =>Đạt dạng chuẩn 3NF");
+            detail3.setText(text3);
+            details.add(detail3);
 
             // Xét dạng chuẩn BC
-            normalFormText = normalFormText.concat("\n-Xét dạng chuẩn BC: ");
+            Detail detail4 = new Detail();
+            List<String> text4 = new ArrayList<>();
+            detail4.setStep("Xét dạng chuẩn BC::");
+
             for (String pthtt : listToiThieuPTH) {
-                String VT = pthtt.split("→")[0];
-                String VP = pthtt.split("→")[1];
-                if (!VT.contains(VP)) { // VP không thuộc Vt
+                String veTrai = pthtt.split("→")[0];
+                String vePhai = pthtt.split("→")[1];
+                if (!veTrai.contains(vePhai)) { // VP không thuộc Vt
                     for (String khoa : listTapKhoa) {
-                        if (khoa.equals(VT)) {
-                            //checkDCBC = true;
+                        if (khoa.equals(veTrai)) {
+                           // checkDCBC = true; Đúng
                         } else {
                             checkDCBC = false;
-                            normalFormText = normalFormText.concat("\n\t+) Xét phụ thuộc hàm " + pthtt + ": \n\tthuộc tính vế trái " + VT + " là phải là siêu khóa không khóa. => Vi phạm dạng chuẩn BC");
+                            text4.add("+) Xét phụ thuộc hàm " + pthtt + ":");
+                            text4.add("Thuộc tính vế trái " + veTrai + " là phải là siêu khóa không khóa. => Vi phạm dạng chuẩn BC");
                         }
                     }
                 }
             }
 
             if (!checkDCBC) {
-                normalFormText = normalFormText.concat("\n=> Vậy Lược đồ quan hệ chỉ đạt dạng chuẩn 3NF");
-                dangchuancaonhat = "Lược đồ đạt dạng chuẩn BCNF";
-                return dangchuancaonhat;
+                detail4.setText(text4);
+                details.add(detail4);
+                normalFormContent.setValue(details);
+                normalFormContent.setResult("Kết luận: Vậy Lược đồ quan hệ chỉ đạt dạng chuẩn 3NF");
+                return normalFormContent;
             }
 
-            normalFormText = normalFormText.concat("\n\tVì mọi phụ thuộc hàm đều có vế trái là siêu khóa =>Đạt dạng chuẩn BCNF");
-            dangchuancaonhat = "Lược đồ đạt dạng chuẩn BCNF";
+            text4.add("Vì mọi phụ thuộc hàm đều có vế trái là siêu khóa =>Đạt dạng chuẩn BCNF");
+            detail4.setText(text4);
+            details.add(detail4);
+            normalFormContent.setValue(details);
+            normalFormContent.setResult("Kết luận: Đạt dạng chuẩn BCNF");
         }
 
-        return dangchuancaonhat;
+        return normalFormContent;
+    }
+
+    @Override
+    public ResponseBase listExampleCSDL() {
+        List<ExampleCSDL> listCSDL = new ArrayList<>();
+        ExampleCSDL item1 = new ExampleCSDL("Lược đồ 1", "ABCDEGH", "{A→ BC, BE → G, E → D, D → G, A → B, AG → BC}");
+        ExampleCSDL item2 = new ExampleCSDL("Lược đồ 2", "A, B, C, D, E, G", "AB→ C, AC→D, D→EG, G→B, A→D, CG→A");
+        ExampleCSDL item3 = new ExampleCSDL("Lược đồ 3", "{A, B, C, D, E, G, H, I, J}", "{A → BDE, DE → G, H → J, J → HI, E → DG, BC→ GH, HG→J, E→G}");
+        ExampleCSDL item4 = new ExampleCSDL("Lược đồ 4", "ABCDEHK", "{AB→C; CD→E; AH→K; A→D; B→D}");
+        ExampleCSDL item5 = new ExampleCSDL("Lược đồ 5", "A, B, C, D, E, G", "{ AB →C; C →A; BC →D; ACD →B; D →EG; BE →C; CG →BD; CE →AG }");
+
+        listCSDL.add(item1);
+        listCSDL.add(item2);
+        listCSDL.add(item3);
+        listCSDL.add(item4);
+        listCSDL.add(item5);
+
+        return  ResponseExample.builder()
+                .enumResultCode(EnumResultCode.SUCCESS)
+                .data(listCSDL)
+                .build();
     }
 
 }

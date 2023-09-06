@@ -8,7 +8,7 @@ import lombok.Data;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DataCSDL {
-    private infoCSDL information; // Thông tin
+    private InformationCSDL information; // Thông tin
     private Content primaryKey; // Khóa chính
     private Content minimalCove; // Phủ tối thiểu
     private Content normalForm; // Dạng chuẩn

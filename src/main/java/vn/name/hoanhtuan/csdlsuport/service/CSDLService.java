@@ -7,4 +7,5 @@ import vn.name.hoanhtuan.csdlsuport.model.csdl.request.RequestCSDLSupport;
 public interface CSDLService {
     ResponseBase timBaoDong(RequestBaoDong request);
     ResponseBase phanTichCSDL(RequestCSDLSupport request);
+    ResponseBase listExampleCSDL();
 }
