@@ -15,5 +15,4 @@ public class Constant {
     public static final String BAO_DONG_VALID = "Bao dong hop le: {}";
     public static final String LOG_ITEM_PTH = "Item PTH: {} - ";
     public static final String LOG_ITEM_BAO_DONG = "ItemChar Baodong: {} - ";
-    public static final String DETAIL_EXPLANATION = "CSDL-NO";
 }
