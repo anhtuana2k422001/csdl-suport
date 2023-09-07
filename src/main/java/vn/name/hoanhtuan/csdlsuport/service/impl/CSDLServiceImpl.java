@@ -28,7 +28,7 @@ public class CSDLServiceImpl implements CSDLService {
     public ResponseBase timBaoDong(RequestBaoDong request) {
 
         List<String> listPTH; // danh sách phụ thuộc hàm
-        String baoDong = Handle.BaoDong(request.getAttributeSet());
+        String baoDong = Handle.baoDong(request.getAttributeSet());
         String tapPTH = request.getDependencyChain();
 
         EnumResultCode resultValidatePTH = ValidationCSDL.validatePTH(tapPTH);
@@ -36,9 +36,9 @@ public class CSDLServiceImpl implements CSDLService {
             return new ResponseBase(resultValidatePTH);
         }
 
-        listPTH = Handle.XuLyPhuThuocHam(tapPTH);
-        if(listPTH == null) {
-            return new ResponseBase(EnumResultCode.SYSTEM_ERROR);
+        listPTH = Handle.xuLyPhuThuocHam(tapPTH);
+        if(listPTH.isEmpty()) {
+            return new ResponseBase(EnumResultCode.ERROR_HANDLER_PTH);
         }
 
         EnumResultCode validateValid =  ValidationCSDL.validateCLSD(baoDong, listPTH);
@@ -47,7 +47,7 @@ public class CSDLServiceImpl implements CSDLService {
         }
 
         // Gán lại PTH đã loại bỏ thuộc tính xác định dư thừa
-        listPTH = Handle.BoThuocTinhPTHThua(listPTH);
+        listPTH = Handle.boThuocTinhPTHThua(listPTH);
 
         // Handle code
         String properties = Handle.uniqueKyTuSapXep(request.getProperties());
@@ -64,7 +64,7 @@ public class CSDLServiceImpl implements CSDLService {
             }
         }
 
-        String result = Handle.TimBaoDong(properties, listPTH);
+        String result = Handle.timBaoDong(properties, listPTH);
         String dataResponse = "{" + properties + "}+ = " + result;
 
         return ResponseBaoDong.builder()
@@ -78,14 +78,14 @@ public class CSDLServiceImpl implements CSDLService {
         List<String> listPTH; // danh sách phụ thuộc hàm
         String tapPTH = request.getDependencyChain();
 
-        String baoDong = Handle.BaoDong(request.getAttributeSet());
+        String baoDong = Handle.baoDong(request.getAttributeSet());
         infoCSDL.setBaodongLDQH(baoDong);
         if(StringUtils.isEmpty(baoDong))
             infoCSDL.setBaodongLDQH("{Ø}");
 
-        listPTH = Handle.XuLyPhuThuocHam(tapPTH);
-        if(listPTH == null) {
-            return new ResponseBase(EnumResultCode.SYSTEM_ERROR);
+        listPTH = Handle.xuLyPhuThuocHam(tapPTH);
+        if(listPTH.isEmpty()) {
+            return new ResponseBase(EnumResultCode.ERROR_HANDLER_PTH);
         }
 
         EnumResultCode validateValid =  ValidationCSDL.validateCLSD(baoDong, listPTH);
@@ -94,25 +94,25 @@ public class CSDLServiceImpl implements CSDLService {
         }
 
         // Gán lại PTH đã loại bỏ thuộc tính xác định dư thừa
-        listPTH = Handle.BoThuocTinhPTHThua(listPTH);
+        listPTH = Handle.boThuocTinhPTHThua(listPTH);
 
         // Tìm khóa
-        String tapVeTrai = Handle.VeTraiPTH(listPTH);
+        String tapVeTrai = Handle.veTraiPTH(listPTH);
         infoCSDL.setTapVeTrai(tapVeTrai);
         if(StringUtils.isEmpty(tapVeTrai))
             infoCSDL.setTapVeTrai("{Ø}");
 
-        String tapVePhai = Handle.VePhaiPTH(listPTH);
+        String tapVePhai = Handle.vePhaiPTH(listPTH);
         infoCSDL.setTapVePhai(tapVePhai);
         if(StringUtils.isEmpty(tapVePhai))
             infoCSDL.setTapVePhai("{Ø}");
 
-        String nguonPTH =  Handle.TapNguon(baoDong, tapVePhai);
+        String nguonPTH =  Handle.tapNguon(baoDong, tapVePhai);
         infoCSDL.setTapThuocTinhNguonN(nguonPTH);
         if(StringUtils.isEmpty(nguonPTH))
             infoCSDL.setTapThuocTinhNguonN("{Ø}");
 
-        String trungGianPTH =  Handle.TapTrungGian(tapVePhai, tapVeTrai);
+        String trungGianPTH =  Handle.tapTrungGian(tapVePhai, tapVeTrai);
         infoCSDL.setTapTrungGianM(trungGianPTH);
         if(StringUtils.isEmpty(trungGianPTH))
             infoCSDL.setTapTrungGianM("{Ø}");
@@ -141,7 +141,7 @@ public class CSDLServiceImpl implements CSDLService {
     // Hàm tìm phụ thuộc hàm tối thiểu
     public Content phuToiThieu(List<String> listPTH) {
         Content normalFormContent = new Content();
-        normalFormContent.setTitle("Dạng 2: Tìm PTH tối thiểu");
+        normalFormContent.setTitle(Constant.TIM_PHU_TOI_THIEU);
         List<Detail> details = new ArrayList<>();
 
         // Trường hợp không có phụ thuộc hàm
@@ -213,7 +213,7 @@ public class CSDLServiceImpl implements CSDLService {
 
         Detail detail2 = new Detail();
         List<String> text2 = new ArrayList<>();
-        detail2.setStep("Buoc 2: Loại bỏ vế trái dư thừa");
+        detail2.setStep("Bước 2: Loại bỏ vế trái dư thừa");
 
         //=== Bước 2:  Lược bỏ vế trái PTH
         String checkPTHUnique = "";
@@ -229,7 +229,7 @@ public class CSDLServiceImpl implements CSDLService {
                     String indexVT = String.valueOf(veTrai.charAt(i));
                     String conlaiVT = veTrai;
                     conlaiVT = conlaiVT.replace(indexVT, "");
-                    String baodong = Handle.TimBaoDong(conlaiVT, listPTHPhanRa);
+                    String baodong = Handle.timBaoDong(conlaiVT, listPTHPhanRa);
                     if (baodong.contains(vePhai)) {
                         text2.add("Nếu bỏ " + indexVT + ": {" + conlaiVT + "}+ = " + baodong + " có chứa " + vePhai + " => " + indexVT + " dư thừa");
                         itemF = "";
@@ -278,7 +278,7 @@ public class CSDLServiceImpl implements CSDLService {
         //=== Bước 3: Lược bỏ PTH dư thừa
         Detail detail3 = new Detail();
         List<String> text3 = new ArrayList<>();
-        detail3.setStep("Buoc 3: Lược bỏ PTH dư thừa");
+        detail3.setStep("Bước 3: Lược bỏ PTH dư thừa");
 
         // Trường hợp chỉ có 1 PTH
         if (listPTHBoVTUnique.size() == 1) {
@@ -308,7 +308,7 @@ public class CSDLServiceImpl implements CSDLService {
                 listPTHBoPTH.remove(0); // Thay đổi PTH đầu tiên bằng PTh không dư thừa đã xác định
                 listPTHBoPTH.add(0, itemFtt);
             }
-            String baodong = Handle.TimBaoDong(veTrai, listPTHBoPTH);
+            String baodong = Handle.timBaoDong(veTrai, listPTHBoPTH);
             if (baodong.contains(vePhai)) {
                 if (itemFtt.isEmpty()) {
                     listPTHBoPTH.add(vitri, itemCuoi);
@@ -350,7 +350,7 @@ public class CSDLServiceImpl implements CSDLService {
         String thuoctinhM = "";
 
         Content normalFormContent = new Content();
-        normalFormContent.setTitle("Dạng 1: Tìm Khóa");
+        normalFormContent.setTitle(Constant.TIM_KHOA);
         List<Detail> details = new ArrayList<>();
 
         Detail detail = new Detail();
@@ -358,10 +358,10 @@ public class CSDLServiceImpl implements CSDLService {
         detail.setStep("Bước 1: Xét TH khóa duy nhất ");
 
 
-        String baoDongNguon = Handle.TimBaoDong(nguonPTH, listPTH); //Gọi
+        String baoDongNguon = Handle.timBaoDong(nguonPTH, listPTH); //Gọi
         infoCSDL.setTapThuocTinh("Q = (" + baoDong + ")");
 
-        String tapPTH = Handle.TapPhuThuocHam(phuThuocHam);
+        String tapPTH = Handle.tapPhuThuocHam(phuThuocHam);
         if (tapPTH.isEmpty()) {
             tapPTH = "Ø";
         }
@@ -434,7 +434,7 @@ public class CSDLServiceImpl implements CSDLService {
         text1.add("Bao đóng tập hội của Mi với N là: ");
 
         String tapConM = thuoctinhM.replace(", ", "");
-        tapConM =  Handle.SapXepKyTu(tapConM);
+        tapConM =  Handle.sapXepKyTu(tapConM);
         // Hội lại để tìm tất cả tập con của M
         List<String> listTapKhoaHienTai = new ArrayList<>(); // Khai báo
 
@@ -462,7 +462,7 @@ public class CSDLServiceImpl implements CSDLService {
             }
 
             if (!checkSieuKhoa) {
-                String baodongMi = Handle.TimBaoDong(temp, listPTH);
+                String baodongMi = Handle.timBaoDong(temp, listPTH);
                 if (baodongMi.length() == baoDong.length()) {
                     text1.add("+) Xét " + temp + ": {" + temp + "}+ = " + baodongMi + " = Q+ => là khóa");
                     listTapKhoaHienTai.add(temp);
@@ -504,7 +504,7 @@ public class CSDLServiceImpl implements CSDLService {
 
     public Content timDangChuan(String nguonPTH) {
         Content normalFormContent = new Content();
-        normalFormContent.setTitle("Dạng 3: Tìm Dạng chuẩn");
+        normalFormContent.setTitle(Constant.TIM_DANG_CHUAN);
         List<Detail> details = new ArrayList<>();
 
         boolean checkDC2 = true;
@@ -554,7 +554,7 @@ public class CSDLServiceImpl implements CSDLService {
                 detail2.setText(text2);
                 details.add(detail2);
                 normalFormContent.setValue(details);
-                normalFormContent.setResult("Kết luận: Vậy lược đồ quan hệ chỉ đạt dạng chuẩn 1NF.");
+                normalFormContent.setResult(Constant.RESULT_DANG_CHUAN_1);
                 return normalFormContent;
             }
 
@@ -586,7 +586,7 @@ public class CSDLServiceImpl implements CSDLService {
                 detail3.setText(text3);
                 details.add(detail3);
                 normalFormContent.setValue(details);
-                normalFormContent.setResult("Kết luận: Vậy Lược đồ quan hệ chỉ đạt dạng chuẩn 2");
+                normalFormContent.setResult(Constant.RESULT_DANG_CHUAN_2);
                 return normalFormContent;
             }
 
@@ -619,7 +619,7 @@ public class CSDLServiceImpl implements CSDLService {
                 detail4.setText(text4);
                 details.add(detail4);
                 normalFormContent.setValue(details);
-                normalFormContent.setResult("Kết luận: Vậy Lược đồ quan hệ chỉ đạt dạng chuẩn 3NF");
+                normalFormContent.setResult(Constant.RESULT_DANG_CHUAN_3);
                 return normalFormContent;
             }
 
@@ -627,11 +627,12 @@ public class CSDLServiceImpl implements CSDLService {
             detail4.setText(text4);
             details.add(detail4);
             normalFormContent.setValue(details);
-            normalFormContent.setResult("Kết luận: Đạt dạng chuẩn BCNF");
+            normalFormContent.setResult(Constant.RESULT_DANG_CHUAN_BC);
         }
 
         return normalFormContent;
     }
+
 
     @Override
     public ResponseBase listExampleCSDL() {

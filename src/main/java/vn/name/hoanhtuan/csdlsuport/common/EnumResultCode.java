@@ -14,6 +14,7 @@ public enum EnumResultCode {
     DEPENDENCY_ERROR_LOGIC("006", "Tập phụ thuộc hàm mới nhập không hợp lệ. Chương trình chỉ phân biết được các ký tự trong bảng chữ cái tiếng anh và một số ký tự hỗ trợ phụ thuộc hàm."),
     ATTRIBUTE_SET_ERROR_REG("007", "Tập thuộc tính không hợp lệ! Chú ý: Không dùng các ký tự ký hiệu của lược đồ quan hệ sau (1) F là ký hiệu phụ thuộc hàm - (2) U, Q là ký hiệu tập thuộc tính => Giải quyết: Nếu đề bài yêu cầu dùng ký tự đó bạn có thể thay thế ký hiệu khác chưa dùng đến trong tập thuộc tính và tập thuốc tính với tập phụ thuộc hàm phải đồng bộ"),
     ATTRIBUTE_SET_ERROR_LOGIC("008", "Tập thuộc tính mới nhập không hợp lệ. Chương trình chỉ phân biết được các ký tự trong bảng chữ cái tiếng anh và một số ký tự sau: (1) dấu ngoặc mở: () - (2) dấu phẩy: , - (3) dấu chấm: . - (4) dấu chấm phẩy: ; - (5) dấu ngoặc ngọn: {} - (6) dấu bằng: ="),
+    ERROR_HANDLER_PTH("009", "Phụ thuộc hàm không hợp lệ, kiểm tra lại phụ thuộc hàm. Đặc biệt chú ý: Không được để thừa 2 ký tự sau ở đầu chuỗi và cuối chuỗi PTH (1) dấu chấm phẩy: ; (2) dấu phẩy: )"),
 
     // INVALID REQUEST
     INVALID_PARAM_REQUEST("100", "Đầu vào không hợp lệ"),
