@@ -20,7 +20,6 @@ import java.util.List;
 public class CSDLServiceImpl implements CSDLService {
     private List<String> listToiThieuPTH = new ArrayList<>();// List khóa để xét DC
     private static final List<String> listTapKhoa = new ArrayList<>();// List khóa để xét DC
-    private InformationCSDL infoCSDL_V1 = new InformationCSDL();
     List<DataInfo> dataInfos = new ArrayList<>();
     private boolean checkKhoaDuyNhat = false;
 
@@ -76,11 +75,11 @@ public class CSDLServiceImpl implements CSDLService {
 
     @Override
     public ResponseBase phanTichCSDL(RequestCSDLSupport request) {
+        InformationCSDL infoCSDL = new InformationCSDL();
         listToiThieuPTH.clear();
         listTapKhoa.clear();
         dataInfos.clear();
         checkKhoaDuyNhat = false;
-        infoCSDL_V1 = new InformationCSDL();
 
         List<String> listPTH; // danh sách phụ thuộc hàm
         String tapPTH = request.getDependencyChain();
@@ -142,9 +141,9 @@ public class CSDLServiceImpl implements CSDLService {
         // Tìm dạng chuẩn
         Content ketQuaDangVhuan = timDangChuan(nguonPTH);
 
-        infoCSDL_V1.setDataInfo(dataInfos);
+        infoCSDL.setDataInfo(dataInfos);
         DataCSDL dataResponse = DataCSDL.builder()
-                .information(infoCSDL_V1)
+                .information(infoCSDL)
                 .primaryKey(kqKhoaDuyNhat)
                 .minimalCove(ketQuaFTT)
                 .normalForm(ketQuaDangVhuan)
