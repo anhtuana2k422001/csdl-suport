@@ -3,9 +3,10 @@
     <!--Config log -->
     <property name="FILE_NAME_LOG" value="log/my_log.log" />
     <property name="LOG_DAY" value="log/archived/my_log-%d{yyyy-MM-dd}.%i.log.gz" />
+    <property name="LOG_MONTH" value="log/archived/my_log-%d{yyyy-MM}.%i.log.gz" />
     <property name="INFO_CONSOLE_LOG" value="%yellow(%d{ISO8601}) %highlight(%-5level) [%green(%-22thread)] %cyan(%-36X{requestId}) [%blue(%logger{0}.%method:%line)] %magenta(%msg) %throwable%n"/>
     <property name="INFO_FILE_LOG" value="%d %-5p [%-21t] %-36X{requestId} [%logger{0}.%method:%line] %m %n"/>
-    <property name="MAX_SIZE_LOG" value="10MB"/>
+    <property name="MAX_SIZE_LOG" value="20MB"/>
     <!-- Case 1 : Log console -->
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
@@ -23,7 +24,7 @@
             <Pattern>${INFO_FILE_LOG}</Pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DAY}</fileNamePattern>
+            <fileNamePattern>${LOG_MONTH}</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>${MAX_SIZE_LOG}</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>

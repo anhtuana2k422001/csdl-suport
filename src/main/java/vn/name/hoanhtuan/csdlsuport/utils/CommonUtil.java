@@ -17,10 +17,11 @@ public class CommonUtil {
         MDC.put(Constant.REQUEST_ID, requestId);
     }
 
-    public static void handleException(Exception ex ){
-        if (ex instanceof CSDLException exception && !StringUtils.isBlank(exception.getMessage()))
-            LOGGER.info(Constant.EXCEPTION_MESSAGE, exception.getMessage());
-        else
-            LOGGER.error(Constant.EXCEPTION , ex.getMessage(), ex);
+    public static void handleException(Exception ex) {
+        if (ex instanceof CSDLException && !StringUtils.isBlank(ex.getMessage())) {
+            LOGGER.info(Constant.EXCEPTION_MESSAGE, ex.getMessage());
+        } else {
+            LOGGER.error(Constant.EXCEPTION, ex.getMessage(), ex);
+        }
     }
 }
