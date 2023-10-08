@@ -2,13 +2,9 @@ package vn.name.hoanhtuan.csdlsuport.model.csdl.response;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class InformationCSDL {
-    private String tapThuocTinh;
-    private String phuThuocHam;
-    private String baodongLDQH;
-    private String tapVeTrai;
-    private String tapVePhai;
-    private String tapThuocTinhNguonN;
-    private String tapTrungGianM;
+    private List<DataInfo> dataInfo;
 }
