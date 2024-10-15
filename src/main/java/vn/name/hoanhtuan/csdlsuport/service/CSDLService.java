@@ -8,4 +8,5 @@ public interface CSDLService {
     ResponseBase timBaoDong(RequestBaoDong request);
     ResponseBase phanTichCSDL(RequestCSDLSupport request);
     ResponseBase listExampleCSDL();
+    ResponseBase listUserMobile();
 }

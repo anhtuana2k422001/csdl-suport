@@ -99,4 +99,22 @@ public class CSDLController {
         return ResponseUtils.response(response);
     }
 
+    @GetMapping("movie/search")
+    public ResponseEntity<ResponseBase> listUserMobile(){
+        ResponseBase response = new ResponseBase(EnumResultCode.SYSTEM_ERROR);
+        String requestId = UUID.randomUUID().toString();
+        CommonUtil.writeLogRequestId(requestId);
+
+        try {
+            response = csdlService.listUserMobile();
+        } catch (Exception ex) {
+            CommonUtil.handleException(ex);
+        }
+
+        LOGGER.info(Constant.RESPONSE_BODY, response);
+        return ResponseUtils.response(response);
+    }
+
+
+
 }

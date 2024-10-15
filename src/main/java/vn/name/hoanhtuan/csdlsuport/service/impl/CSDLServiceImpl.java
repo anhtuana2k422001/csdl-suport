@@ -9,6 +9,10 @@ import vn.name.hoanhtuan.csdlsuport.model.ResponseBase;
 import vn.name.hoanhtuan.csdlsuport.model.csdl.request.RequestBaoDong;
 import vn.name.hoanhtuan.csdlsuport.model.csdl.request.RequestCSDLSupport;
 import vn.name.hoanhtuan.csdlsuport.model.csdl.response.*;
+import vn.name.hoanhtuan.csdlsuport.model.user.ResponseUser;
+import vn.name.hoanhtuan.csdlsuport.model.user.Results;
+import vn.name.hoanhtuan.csdlsuport.model.user.UserInfo;
+import vn.name.hoanhtuan.csdlsuport.model.user.UserMobile;
 import vn.name.hoanhtuan.csdlsuport.service.CSDLService;
 import vn.name.hoanhtuan.csdlsuport.service.Handle;
 import vn.name.hoanhtuan.csdlsuport.validate.ValidationCSDL;
@@ -662,6 +666,28 @@ public class CSDLServiceImpl implements CSDLService {
         return  ResponseExample.builder()
                 .enumResultCode(EnumResultCode.SUCCESS)
                 .data(listCSDL)
+                .build();
+    }
+
+    @Override
+    public ResponseBase listUserMobile() {
+        UserMobile userMobile = new UserMobile();
+        userMobile.setPage("1");
+
+        List<UserInfo> userInfo = new ArrayList<>();
+        UserInfo item1 = new UserInfo("1", "0392766630");
+        UserInfo item2 = new UserInfo("2", "12345678");
+        userInfo.add(item1);
+        userInfo.add(item2);
+
+        Results results = new Results();
+        results.setUserInfo(userInfo);
+
+        userMobile.setResults(results);
+
+        return  ResponseUser.builder()
+                .enumResultCode(EnumResultCode.SUCCESS)
+                .userMobile(userMobile)
                 .build();
     }
 
